@@ -408,6 +408,18 @@ void writeEmuController(Dualsense &controller, Settings &settings)
                 editedButtonState.RY = 128 + static_cast<int>(deltaRY * scale);
             }
 
+            // Map right stick X to Y if enabled
+            if (settings.MapRightStickXToY) {
+                int originalRX = editedButtonState.RX;
+                int originalRY = editedButtonState.RY;
+                
+                // Map X axis to Y axis
+                editedButtonState.RY = originalRX;
+                
+                // Keep original Y value or reset to center
+                // editedButtonState.RX = 128; // Uncomment to reset X to center
+            }
+
             if (settings.TriggersAsButtons) {
                 if (editedButtonState.L2 >= 1) {
                     editedButtonState.L2 = 255;
@@ -2917,6 +2929,7 @@ int main()
                                     ImGui::Checkbox(strings.TouchpadAsSelect.c_str(), &s.TouchpadAsSelect);
                                     ImGui::Checkbox(strings.TouchpadAsStart.c_str(), &s.TouchpadAsStart);
                                     ImGui::Checkbox(strings.TouchpadAsRightStick.c_str(), &s.TouchpadToRXRY);
+                                    ImGui::Checkbox(strings.MapRightStickXToY.c_str(), &s.MapRightStickXToY);
                                     ImGui::Checkbox(strings.OverrideDS4Lightbar.c_str(), &s.OverrideDS4Lightbar);
                             }
 

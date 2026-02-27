@@ -95,6 +95,7 @@ public:
     bool OverrideDS4Lightbar = false;
     bool TouchpadToRXRY = false;
     bool FullyRetractTriggers = true;
+    bool MapRightStickXToY = false;
     bool TouchpadToHaptics = false;
     float TouchpadToHapticsFrequency = 20.0f;
     bool GyroToMouse = false;
@@ -167,6 +168,7 @@ public:
         j["FullyRetractTriggers"] = FullyRetractTriggers;
         j["OverrideDS4Lightbar"] = OverrideDS4Lightbar;
         j["TouchpadToRXRY"] = TouchpadToRXRY;
+        j["MapRightStickXToY"] = MapRightStickXToY;
         j["HapticsAndSpeakerToLedScale"] = HapticsAndSpeakerToLedScale;
         j["SpeakerToLED"] = SpeakerToLED;
         j["HapticsToLED"] = HapticsToLED;
@@ -261,6 +263,7 @@ public:
         if (j.contains("FullyRetractTriggers"))       j.at("FullyRetractTriggers").get_to(settings.FullyRetractTriggers);
         if (j.contains("OverrideDS4Lightbar"))       j.at("OverrideDS4Lightbar").get_to(settings.OverrideDS4Lightbar);
         if (j.contains("TouchpadToRXRY"))       j.at("TouchpadToRXRY").get_to(settings.TouchpadToRXRY);
+        if (j.contains("MapRightStickXToY"))       j.at("MapRightStickXToY").get_to(settings.MapRightStickXToY);
         if (j.contains("HapticsAndSpeakerToLedScale"))       j.at("HapticsAndSpeakerToLedScale").get_to(settings.HapticsAndSpeakerToLedScale);
         if (j.contains("SpeakerToLED"))       j.at("SpeakerToLED").get_to(settings.SpeakerToLED);
         if (j.contains("HapticsToLED"))       j.at("HapticsToLED").get_to(settings.HapticsToLED);

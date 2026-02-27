@@ -65,6 +65,7 @@ std::vector<std::string> languages = {"en", "pl", "it", "es", "pt", "fr", "ja", 
     X(DualShock4V2emu, "DualShock4 V2 (CUH-ZCT2x)") \
     X(LeftAnalogStickDeadZone, "Left analog stick deadzone") \
     X(RightAnalogStickDeadZone, "Right analog stick deadzone") \
+    X(MapRightStickXToY, "Map right stick X (left/right) to Y (up/down)") \
     X(TriggersAsButtons, "Triggers as buttons") \
     X(SpeakerVolume, "Speaker volume") \
     X(HapticsUnavailableNoAudioDevice, "Couldn't find the DualSense Wireless Controller speaker associated with this controller. Haptic feedback not available") \
