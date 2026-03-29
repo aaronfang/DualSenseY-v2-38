@@ -1,4 +1,4 @@
-﻿const int VERSION = 38;
+const int VERSION = 38;
 
 extern "C" {
     __declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
@@ -351,6 +351,7 @@ void writeEmuController(Dualsense &controller, Settings &settings)
                     v.StartX360();
                     wasVirtualControllerStarted = true;
                     lastEmu = X360;
+                    MyUtils::RunAsyncHidHideRequest(controller.GetPath(), "hide");
                 }
                 else if (settings.emuStatus == DS4) {
                     if (settings.DualShock4V2)
@@ -361,6 +362,7 @@ void writeEmuController(Dualsense &controller, Settings &settings)
                     v.StartDS4();
                     lastEmu = DS4;
                     wasVirtualControllerStarted = true;
+                    MyUtils::RunAsyncHidHideRequest(controller.GetPath(), "hide");
                 }
             }
             else if (wasVirtualControllerStarted&& settings.emuStatus != lastEmu) {
@@ -408,16 +410,9 @@ void writeEmuController(Dualsense &controller, Settings &settings)
                 editedButtonState.RY = 128 + static_cast<int>(deltaRY * scale);
             }
 
-            // Map right stick X to Y if enabled
+            // Swap right stick axes: physical Y (e.g. down) drives logical X, physical X drives logical Y
             if (settings.MapRightStickXToY) {
-                int originalRX = editedButtonState.RX;
-                int originalRY = editedButtonState.RY;
-                
-                // Map X axis to Y axis
-                editedButtonState.RY = originalRX;
-                
-                // Keep original Y value or reset to center
-                // editedButtonState.RX = 128; // Uncomment to reset X to center
+                std::swap(editedButtonState.RX, editedButtonState.RY);
             }
 
             if (settings.TriggersAsButtons) {
@@ -1367,7 +1362,8 @@ void writeControllerState(Dualsense &controller, Settings &settings, UDP &udpSer
 
 void setTaskbarIcon(GLFWwindow* window) {
     int width, height, nrChannels;
-    unsigned char* img = stbi_load("utilities/icon.png", &width, &height, &nrChannels, 4);
+    const std::string iconPng = MyUtils::GetExecutableFolderPath() + "\\utilities\\icon.png";
+    unsigned char* img = stbi_load(iconPng.c_str(), &width, &height, &nrChannels, 4);
     
     if (img) {
         GLFWimage icon;
@@ -1401,6 +1397,35 @@ void mTray(Tray::Tray &tray, Config::AppConfig &AppConfig) {
     }));
 
     tray.run();
+}
+
+static HICON LoadTrayIconHicon()
+{
+    const int sm = GetSystemMetrics(SM_CXSMICON);
+    const int smy = GetSystemMetrics(SM_CYSMICON);
+    std::string folder = MyUtils::GetExecutableFolderPath();
+    std::string utilIco = folder + "\\utilities\\icon.ico";
+    HICON h = (HICON)LoadImageA(nullptr, utilIco.c_str(), IMAGE_ICON, sm, smy, LR_LOADFROMFILE);
+    if (h)
+        return h;
+    std::string sideIco = folder + "\\icon.ico";
+    h = (HICON)LoadImageA(nullptr, sideIco.c_str(), IMAGE_ICON, sm, smy, LR_LOADFROMFILE);
+    if (h)
+        return h;
+    HICON largeIcon = nullptr;
+    HICON smallIcon = nullptr;
+    const std::string exePath = MyUtils::GetExecutablePath();
+    if (ExtractIconExA(exePath.c_str(), 0, &largeIcon, &smallIcon, 1) > 0) {
+        if (largeIcon)
+            DestroyIcon(largeIcon);
+        if (smallIcon)
+            return smallIcon;
+    }
+    h = (HICON)LoadImage(GetModuleHandle(nullptr), MAKEINTRESOURCE(1), IMAGE_ICON, sm, smy, 0);
+    if (h)
+        return h;
+    HICON stock = LoadIcon(nullptr, IDI_APPLICATION);
+    return stock ? CopyIcon(stock) : nullptr;
 }
 
 int main()
@@ -1470,7 +1495,7 @@ int main()
     }
     
 
-    Tray::Tray tray("test", "utilities\\icon.ico");
+    Tray::Tray tray("DualSenseY_tray", Tray::Icon(LoadTrayIconHicon()));
     std::thread trayThread(mTray, std::ref(tray), std::ref(appConfig));
     trayThread.detach();
 
@@ -1719,7 +1744,7 @@ int main()
         {
             if (ImGui::Begin("Background", nullptr, window_flags)) {
                 ImVec2 availSize = ImGui::GetContentRegionAvail();
-                ImGui::Image((void*)(intptr_t)textureID, availSize);
+                ImGui::Image((ImTextureID)(uintptr_t)textureID, availSize);
                 ImGui::End();
             }
         }
@@ -1752,6 +1777,7 @@ int main()
                                         ImGui::SliderFloat(std::string(std::string("A##") + colorName).c_str(), &color->w, 0.0f, 1.0f);
                                         ImGui::PopItemWidth();
                                     }
+                ImGui::End();
             }
         }
 
@@ -3023,7 +3049,7 @@ int main()
                     ImGui::EndMenu();
                }
                MainMenuBarHeight = ImGui::GetFrameHeight();
-                ImGui::EndMenuBar();
+                ImGui::EndMainMenuBar();
             }          
         }
 

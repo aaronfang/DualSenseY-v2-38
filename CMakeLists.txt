@@ -12,6 +12,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(GLFW_USE_HYBRID_HPG ON CACHE BOOL "Use hybrid high-performance GPU" FORCE)
 
+# On Windows, hidapi and cpr default to shared libs; without copying DLLs next to DSX.exe the app fails to start.
+if(WIN32)
+    set(BUILD_SHARED_LIBS OFF CACHE BOOL "Prefer static libraries for in-tree deps (hidapi, cpr/curl)" FORCE)
+endif()
+
 # Options
 option(ENABLE_WARNINGS "Enable to add warnings to a target." ON)
 option(ENABLE_WARNINGS_AS_ERRORS "Enable to treat warnings as errors." OFF)

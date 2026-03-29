@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualBasic;
+using Microsoft.VisualBasic;
 using Nefarius.Drivers.HidHide;
 using Nefarius.Utilities.DeviceManagement.PnP;
 using System.Runtime.InteropServices;
@@ -40,9 +40,11 @@ public class Program {
             return;
         }
 
-        string dirFullName = AppDomain.CurrentDomain.BaseDirectory.Replace("utilities\\", "DSX.exe");
-        if (!File.Exists(dirFullName)) {
-            NativeMethods.MsgBox(0, $"Couldn't find DSX.exe!\nError path: {dirFullName}", "Error", 0);
+        string utilitiesDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\', '/');
+        string? parentDir = Directory.GetParent(utilitiesDir)?.FullName;
+        string dirFullName = parentDir != null ? Path.Combine(parentDir, "DSX.exe") : "";
+        if (dirFullName == "" || !File.Exists(dirFullName)) {
+            NativeMethods.MsgBox(0, $"Couldn't find DSX.exe!\nSearched: {dirFullName}", "Error", 0);
             return;
         }
 
@@ -64,16 +66,10 @@ public class Program {
             hidHide.IsActive = false;
         }
 
-        Console.ForegroundColor = ConsoleColor.Yellow;
-        Console.WriteLine("Searching device by instance ID...");
+        // Do not Disable/Enable the device: that causes Windows disconnect sounds, breaks open HID handles,
+        // and can make DSX reconnect in a loop. HidHide's blocked list + active filter is sufficient.
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("HidHide configuration updated.");
         Console.ForegroundColor = ConsoleColor.White;
-        PnPDevice Device = PnPDevice.GetDeviceByInstanceId(instanceID);
-        try {
-            Console.WriteLine("Disabling the device... Please wait");
-            Device.Disable();
-        }
-        catch { }
-        Console.WriteLine("Re-enabling the device...");
-        Device.Enable();
     }
 }

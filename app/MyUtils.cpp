@@ -1,6 +1,7 @@
 #include "MyUtils.h"
 #include <errno.h>
 #include <codecvt>
+#include <vector>
 #include "IMMNotificationClient.h"
 #define SYSERROR()  errno
 
@@ -148,32 +149,34 @@ namespace MyUtils {
     }
 
     void StartHidHideRequest(std::string ID, std::string arg) {
-        STARTUPINFO si;
-        PROCESS_INFORMATION pi;
+        const std::string folder = GetExecutableFolderPath();
+        if (folder.empty())
+            return;
 
-        ZeroMemory(&si, sizeof(si));
+        const std::string helper = folder + "\\utilities\\hidhide_service_request.exe";
+        std::string cmdLine = "\"" + helper + "\" \"" + ID + "\" \"" + arg + "\"";
+        std::vector<char> cmdMutable(cmdLine.begin(), cmdLine.end());
+        cmdMutable.push_back('\0');
+
+        STARTUPINFOA si{};
         si.cb = sizeof(si);
-        si.dwFlags = STARTF_USESHOWWINDOW; // Use this flag to control window visibility
-        si.wShowWindow = SW_HIDE;          // Set to SW_HIDE to prevent the window from showing
+        si.dwFlags = STARTF_USESHOWWINDOW;
+        si.wShowWindow = SW_HIDE;
 
-        ZeroMemory(&pi, sizeof(pi));
+        PROCESS_INFORMATION pi{};
+        std::vector<char> dirBuf(folder.begin(), folder.end());
+        dirBuf.push_back('\0');
 
-        std::string arg1 = "\"" + ID + "\"";
-        std::string arg2 = " \"" + arg + "\" ";
-        std::string command = "utilities\\hidhide_service_request.exe " + arg1 + arg2;
-
-        if (CreateProcess(NULL,              // No module name (use command line)
-                          (LPSTR)command.c_str(), // Command line
-                          NULL,               // Process handle not inheritable
-                          NULL,               // Thread handle not inheritable
-                          FALSE,              // Set handle inheritance to FALSE
-                          0,                  // No creation flags
-                          NULL,               // Use parent's environment block
-                          NULL,               // Use parent's starting directory 
-                          &si,                // Pointer to STARTUPINFO structure
-                          &pi)                // Pointer to PROCESS_INFORMATION structure
-           ) {
-            // Close process and thread handles. 
+        if (CreateProcessA(nullptr,
+                           cmdMutable.data(),
+                           nullptr,
+                           nullptr,
+                           FALSE,
+                           0,
+                           nullptr,
+                           dirBuf.data(),
+                           &si,
+                           &pi)) {
             CloseHandle(pi.hProcess);
             CloseHandle(pi.hThread);
         }
